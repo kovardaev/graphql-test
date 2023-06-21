@@ -22,8 +22,7 @@ router.post('/', async (req, res) => {
         const todo = await Todo.create({
             title: req.body.title,
             done: false
-        });
-            
+        });   
         res.status(201).json({todo});
     } catch (err) {
         console.log(err);
@@ -56,7 +55,6 @@ router.delete('/:id', async (req, res) => {
                 id: +req.params.id
             }
         });
-
         const todo = todos[0];
         await todo.destroy();
         res.status(204).json({});

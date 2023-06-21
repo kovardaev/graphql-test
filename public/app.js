@@ -9,38 +9,68 @@ new Vue({
         }
     },
     created() {
-        fetch('/api/todo', {
-            method: 'get'
+        const query = `
+            query {
+                getTodos {
+                    id title done createdAt updatedAt 
+                }    
+            }
+        `;
+        fetch('/graphql', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({query})
         })
             .then(res => res.json())
-            .then(todos => {
-                this.todos = todos;
+            .then(response => {
+                this.todos = response.data.getTodos;
             })
-            .catch(err => console.log(err))
     },
     methods: {
         addTodo() {
             const title = this.todoTitle.trim();
-
             if (!title) {
                 return;
             }
-
-            fetch('/api/todo', {
+            const query = `
+                mutation {
+                    createTodo(todo: {title: "${title}"}) {
+                        id title done createdAt updatedAt
+                    }
+                }
+            `;
+            fetch('/graphql', {
                 method: 'post',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({title})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({query})
             })
                 .then(res => res.json())
-                .then(({todo}) => {
+                .then(response => {
+                    const todo = response.data.createTodo;
                     this.todos.push(todo);
                     this.todoTitle = '';
                 })
                 .catch(err => console.log(err));      
         },
         removeTodo(id) {
-            fetch('/api/todo/' + id, {
-                method: 'delete'
+            const query = `
+                mutation {
+                    deleteTodo(id: "${id}")
+                }
+            `;
+            fetch('/graphql', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({query})
             })
                 .then(() => {
                     this.todos = this.todos.filter(t => t.id !== id);
@@ -48,15 +78,25 @@ new Vue({
                 .catch(err => console.log(err));        
         },
         completeTodo(id) {
-            fetch('/api/todo/' + id, {
-                method: 'put',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({done: true})
+            const query = `
+                mutation {
+                    completeTodo(id: "${id}") {
+                        updatedAt
+                    }
+                }
+            `;
+            fetch('/graphql', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({query})
             })
                 .then(res => res.json())
-                .then(({todo}) => {
-                    const idx = this.todos.findIndex(t => t.id == todo.id);
-                    this.todos[idx].updatedAt = todo.updatedAt;
+                .then(response => {
+                    const idx = this.todos.findIndex(t => t.id === id);
+                    this.todos[idx].updatedAt = response.data.completeTodo.updatedAt;
                 })
                 .catch(err => console.log(err)); 
         }
@@ -78,7 +118,7 @@ new Vue({
                 options.second = '2-digit';
             }
 
-            return new Intl.DateTimeFormat('en-US', options).format(new Date(value));
+            return new Intl.DateTimeFormat('en-US', options).format(new Date(+value));
         }
     }
 });

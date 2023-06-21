@@ -5,8 +5,8 @@ const todo = sequelize.define('Todo', {
     id: {
         primaryKey: true,
         autoIncrement: true,
-        type: Sequalize.INTEGER,
-        allowNull: false
+        allowNull: false,
+        type: Sequalize.INTEGER
     },
     done: {
         type: Sequalize.BOOLEAN,
